@@ -1,7 +1,9 @@
 import streamlit as st
-from audio_recorder_streamlit import audio_recorder
-from graph import final_answer
-# from streamlit_modal import Modal
+# from audio_recorder_streamlit import audio_recorder
+from streamlit_modal import Modal
+import requests
+
+url='http://13.234.19.201:8505/'
 
 
 st.set_page_config(layout="wide",page_title="LoopTech HR",page_icon="🤖" )
@@ -27,18 +29,18 @@ if 'store_message' not in st.session_state:
 st.title(":blue[LOOPTECH] HR POLICY HELPER")
 
 container=st.container(height=400)
+message=st.chat_input("say somthing.....")
 
+# col1, col2 = st.columns([1,9])
 
-col1, col2 = st.columns([1,9])
+# with col1:
+#     audio_bytes=audio_recorder(text="",
+#     recording_color="#e8b62c",
+#     neutral_color="#6aa36f",
+#     icon_size="2x")
 
-with col1:
-    audio_bytes=audio_recorder(text="",
-    recording_color="#e8b62c",
-    neutral_color="#6aa36f",
-    icon_size="2x")
-
-with col2:
-    message=st.chat_input("say somthing.....")
+# with col2:
+#     message=st.chat_input("say somthing.....")
 
 
 
@@ -58,8 +60,24 @@ with demo_chat:
     
 if(message):
     
-    st.session_state.store_message.append({"user":message,"ass":final_answer(message,querying_tech,retrieving_tech)}) 
-        
+    data={
+
+        "query":message,
+        "queryingtech":querying_tech,
+        "retrievingtech":retrieving_tech
+    } 
+
+    response= requests.post(url=url,json=data)
+    
+    if(response.status_code==200):
+        response_data=response.json()
+        st.session_state.store_message.append({"user":message,"ass":response_data['response']}) 
+    else:
+        model=Modal(key="Demo Key",title="server Error")
+        with model.container():
+            st.write("SOMETHING WRONG WITH A SERVER")
+            st.write(response.status_code)
+
     
 
 
